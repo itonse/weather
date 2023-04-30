@@ -8,6 +8,7 @@ import zerobase.weather.service.DiaryService;
 import java.time.LocalDate;
 import java.util.List;
 
+
 @RestController   // 기본 Controller + http응답을 보낼 때 상태코드(200 ok 등)를 컨트롤러에서 지정을 해서 내려줄 수 있게끔 하는 기능
 public class DiaryController {
     private final DiaryService diaryService;  // 의존하는 클래스
@@ -31,5 +32,11 @@ public class DiaryController {
     List<Diary> readDiaries(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
                             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate){   // start 날짜부터 end 날짜 까지
         return diaryService.readDiaries(startDate, endDate);
+    }
+
+    @PutMapping("/update/diary")  // 날씨 일기 수정
+    void updateDiary(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+                    @RequestBody String text) {  // 해당 날짜, 수정 대상 일기
+        diaryService.updateDiary(date, text);
     }
 }

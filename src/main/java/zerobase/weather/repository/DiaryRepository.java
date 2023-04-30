@@ -12,4 +12,6 @@ public interface DiaryRepository extends JpaRepository<Diary, Integer> {   // <<
     List<Diary> findAllByDate(LocalDate date);   // date 날짜에 해당되는 그 날의 모든 일기를 가져온다.
 
     List<Diary> findAllByDateBetween(LocalDate startDate, LocalDate endDate);  // 알아서 쿼리를 짜줌. start 날짜 ~ end 날짜 의 데이터를 모두 찾아준다.
+
+    Diary getFirstByDate(LocalDate date);   // 해당 날짜의 첫번째 데이터 가져오기
 }
