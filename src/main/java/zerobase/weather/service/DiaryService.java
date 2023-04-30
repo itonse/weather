@@ -16,6 +16,7 @@ import java.net.HttpURLConnection;
 import java.net.URL;
 import java.time.LocalDate;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Service
@@ -46,6 +47,14 @@ public class DiaryService {
         nowDiary.setDate(date);
         diaryRepository.save(nowDiary);   // 데이터를 DB에 넣음
 
+    }
+
+    public List<Diary> readDiary(LocalDate date) {    // 해당 날짜의 모든 날씨 일기 조회
+        return diaryRepository.findAllByDate(date);  // 레포지토리를 통해 DB를 조회함
+    }
+
+    public List<Diary> readDiaries(LocalDate startDate, LocalDate endDate) {   // 기간 날짜들의 모든 날씨 일기 조회
+        return diaryRepository.findAllByDateBetween(startDate, endDate);
     }
 
     private String getWeatherString() {
