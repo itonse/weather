@@ -39,4 +39,9 @@ public class DiaryController {
                     @RequestBody String text) {  // 해당 날짜, 수정 대상 일기
         diaryService.updateDiary(date, text);
     }
+
+    @DeleteMapping("/delete/diary")  // 날씨 일기 삭제
+    void deleteDiary(@RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date ){    // 해당 날짜의 모든 날씨 일기 삭제
+        diaryService.deleteDiary(date);
+    }
 }

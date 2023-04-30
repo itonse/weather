@@ -2,6 +2,7 @@ package zerobase.weather.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import zerobase.weather.domain.Diary;
 
 import java.time.LocalDate;
@@ -14,4 +15,7 @@ public interface DiaryRepository extends JpaRepository<Diary, Integer> {   // <<
     List<Diary> findAllByDateBetween(LocalDate startDate, LocalDate endDate);  // 알아서 쿼리를 짜줌. start 날짜 ~ end 날짜 의 데이터를 모두 찾아준다.
 
     Diary getFirstByDate(LocalDate date);   // 해당 날짜의 첫번째 데이터 가져오기
+
+    @Transactional
+    void deleteAllByDate(LocalDate date);  // 해당 날짜의 모든 일기 삭제
 }
