@@ -14,8 +14,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
-@Transactional  // DB 테스트를 할 때 많이 사용되는 어노테이션 (테스트를 할 때 실제 DB의 정보 변경이 되지 않도록하는). 주석처리하면 테스트 내용으로 DB에서 변경이 됨.
-public class JpaMemoRepositoryTest {
+@Transactional  // DB 테스트를 할 때 많이 사용되는 어노테이션 (테스트를 할 때 실제 DB의 정보 변경이 되지 않도록하는-> 모두 롤백). 주석처리하면 테스트 내용으로 DB에서 변경이 됨.
+public class JpaMemoRepositoryTest {    // 일반적으로 테스트 코드에는 @Transactional 붙여서 모두 롤백 처리
 
     @Autowired  // 불러오기
     JpaMemoRepository jpaMemoRepository;

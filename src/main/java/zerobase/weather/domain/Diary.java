@@ -25,4 +25,11 @@ public class Diary {
     private double temperature;
     private String text;
     private LocalDate date;
+
+    public void setDateWeather(DateWeather dateWeather) {   // dateWeather 객체를 가져와서 객체 내부의 값들을 다이어리 안에 넣어줌
+        this.date = dateWeather.getDate();
+        this.weather = dateWeather.getWeather();
+        this.icon = dateWeather.getIcon();
+        this.temperature = dateWeather.getTemperature();
+    }
 }

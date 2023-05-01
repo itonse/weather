@@ -6,8 +6,13 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
+import zerobase.weather.domain.DateWeather;
 import zerobase.weather.domain.Diary;
+import zerobase.weather.repository.DateWeatherRepository;
 import zerobase.weather.repository.DiaryRepository;
 
 import java.io.BufferedReader;
@@ -20,35 +25,68 @@ import java.util.List;
 import java.util.Map;
 
 @Service
+@Transactional(readOnly = true)  // 아래에 있는 메소드들이 트랜잭션으로 동작하게 됨 (readOnly 만 가능)
 public class DiaryService {
 
     @Value("${openweathermap.key}")  // application.properties 에 들있는 이것의 값을 가져와서
     private String apiKey;   // 이 객체에 값을 넣음.
 
     private final DiaryRepository diaryRepository;  // 의존성
+    private final DateWeatherRepository dateWeatherRepository;
 
-    public DiaryService(DiaryRepository diaryRepository) {  // 생성자
+    public DiaryService(DiaryRepository diaryRepository, DateWeatherRepository dateWeatherRepository) {  // 생성자
         this.diaryRepository = diaryRepository;
+        this.dateWeatherRepository = dateWeatherRepository;
     }
 
-    public void createDiary(LocalDate date, String text) {   // 컨트롤러에서 받아온 객체 사용
-        // open weather map 에서 날씨 데이터 가져오기
-        String weatherData = getWeatherString();
+    @Transactional   // DB 연결 작업이라 어노테이션 붙임
+    @Scheduled(cron = "0 0 1 * * *")   // 5초 간격으로 매분 매시에 동작
+    public void saveWeatherDate(){   // 매일 새벽 1시 마다 날씨 데이터를 저장할 함수
+        dateWeatherRepository.save(getWeatherFromApi());   // getWeatherFromApi 를 통해 데이터를 가져와서 DB에 넣기
+    }
 
-        // 받아온 날씨 json 파싱하기
-        Map<String, Object> parsedWeather = parseWeather(weatherData);
+    @Transactional(isolation = Isolation.SERIALIZABLE)   // 최고 격리수준
+    public void createDiary(LocalDate date, String text) {   // 컨트롤러에서 받아온 객체 사용
+        // 날씨 데이터 가져오기 (API 에서 가져오기 or DB 에서 가져오기)
+        DateWeather dateWeather = getDataWeather(date);   // API 나 DB에서 알아서 원하는 날짜의 DataWeather 값 가져옴
 
         // 파싱된 데이터 + 일기 값 우리 db에 넣기
-        Diary nowDiary = new Diary();  // 빈 다이어리를 만들어서 차차 값 채우기
-        nowDiary.setWeather(parsedWeather.get("main").toString());  // 값 채우기
-        nowDiary.setIcon(parsedWeather.get("icon").toString());
-        nowDiary.setTemperature((Double) parsedWeather.get("temp"));
+        Diary nowDiary = new Diary();  // 빈 다이어리를 만들어서 차차 값 채우기 (도메인의 @NoArgsConstructor 를 추가해서 객체 생성)
+        nowDiary.setDateWeather(dateWeather);   // 다이어리에 dateWeather(date, weather, icon, temperature) 값이 채워짐
         nowDiary.setText(text);
         nowDiary.setDate(date);
         diaryRepository.save(nowDiary);   // 데이터를 DB에 넣음
 
     }
 
+    private DateWeather getWeatherFromApi() {    // API 에서 (당일)날씨 데이터 가져오기
+        // open weather map 에서 날씨 데이터 가져오기
+        String weatherData = getWeatherString();
+
+        // 받아온 날씨 json 파싱하기
+        Map<String, Object> parsedWeather = parseWeather(weatherData);
+        DateWeather dateWeather = new DateWeather();   // 객체 생성
+        dateWeather.setDate(LocalDate.now());   // 날씨를 가져온 시점의 날짜를 넣어주기
+        dateWeather.setWeather(parsedWeather.get("main").toString());  // 값들 넣어주기
+        dateWeather.setIcon(parsedWeather.get("icon").toString());
+        dateWeather.setTemperature((Double) parsedWeather.get("temp"));
+
+        return dateWeather;  // 객체 반환
+    }
+
+    private DateWeather getDataWeather(LocalDate date) {   // DB에서 원하는 날짜의 DataWeather 가져오기
+        List<DateWeather> dateWeatherListFromDB = dateWeatherRepository.findAllByDate(date);
+        if (dateWeatherListFromDB.size() == 0) {  // 가져온 데이터가 없으면
+            // 새로 api에서 날씨 정보를 가져와야한다.
+            // 정책상 현재 날씨를 가져오도록 하기
+            return getWeatherFromApi();   // API 에서 (당일)날씨 데이터 가져오기
+        } else {   // 저장된 그 날의 날씨 데이터가 있으면
+            return dateWeatherListFromDB.get(0);   // 가져오기
+        }
+
+    }
+
+    @Transactional(readOnly = true)  // (읽기전용)
     public List<Diary> readDiary(LocalDate date) {    // 해당 날짜의 모든 날씨 일기 조회
         return diaryRepository.findAllByDate(date);  // 레포지토리를 통해 DB를 조회함
     }
