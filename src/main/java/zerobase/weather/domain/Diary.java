@@ -1,6 +1,5 @@
 package zerobase.weather.domain;
 
-import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -15,7 +14,6 @@ import java.time.LocalDate;
 @Getter
 @Setter
 @NoArgsConstructor  // 다른 패키지의 다른 클래스에서 new 객체로 생성 가능
-//@AllArgsConstructor  // 한번에 Diary의 모든 컬럼 넣기
 public class Diary {
     @Id
     @GeneratedValue (strategy = GenerationType.IDENTITY)  // id 값을 자동생성 가능하도록 설정
